@@ -111,7 +111,7 @@ class Voiture extends Vehicule
         return true;
     }
 
-    /** Ralentit le véhicule sans descendre sous 0 km/h. */
+    /** Ralentit le véhicule sans descendre sous 0 km/h et sans dépasser 20 km/h par action. */
     public function decelerer($vitesse)
     {
         $vitesse = (int) $vitesse;
@@ -120,12 +120,14 @@ class Voiture extends Vehicule
             return false;
         }
 
-        $this->setVitesse($this->getVitesse() - $vitesse);
+        $vitesse = min($vitesse, 20);
+        $nouvelleVitesse = $this->getVitesse() - $vitesse;
+        $this->setVitesse($nouvelleVitesse);
 
         return true;
     }
 
-    /** Accélère le véhicule en respectant la vitesse maximale et la limite de 30 %. */
+    /** Accélère le véhicule en respectant la vitesse maximale. */
     public function accelerer($vitesse)
     {
         $vitesse = (int) $vitesse;
@@ -134,18 +136,7 @@ class Voiture extends Vehicule
             return false;
         }
 
-        $vitesseActuelle = $this->getVitesse();
-
-        if ($vitesseActuelle > 0) {
-            $augmentationMax = (int) ceil($vitesseActuelle * 0.3);
-            $augmentationMax = max(1, $augmentationMax);
-
-            if ($vitesse > $augmentationMax) {
-                $vitesse = $augmentationMax;
-            }
-        }
-
-        $nouvelleVitesse = min($this->getVitesseMax(), $vitesseActuelle + $vitesse);
+        $nouvelleVitesse = min($this->getVitesseMax(), $this->getVitesse() + $vitesse);
         $this->setVitesse($nouvelleVitesse);
 
         return true;
