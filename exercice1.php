@@ -45,7 +45,7 @@ abstract class Vehicule
         $this->demarrer = (bool) $etat;
     }
 
-    /**Retourne la vitesse actuelle. */
+    /** Retourne la vitesse actuelle. */
     public function getVitesse()
     {
         return $this->vitesse;
@@ -100,7 +100,7 @@ class Voiture extends Vehicule
     /** Éteint le véhicule et réactive le frein de parking. */
     public function eteindre()
     {
-        if (!$this->isDemarre()) {
+        if (! $this->isDemarre()) {
             return false;
         }
 
@@ -116,7 +116,7 @@ class Voiture extends Vehicule
     {
         $vitesse = (int) $vitesse;
 
-        if ($vitesse <= 0 || !$this->isDemarre()) {
+        if ($vitesse <= 0 || ! $this->isDemarre()) {
             return false;
         }
 
@@ -125,28 +125,39 @@ class Voiture extends Vehicule
         return true;
     }
 
-    /**Accélère le véhicule en respectant la vitesse maximale. */
+    /** Accélère le véhicule en respectant la vitesse maximale et la limite de 30 %. */
     public function accelerer($vitesse)
     {
         $vitesse = (int) $vitesse;
 
-        if ($vitesse <= 0 || !$this->isDemarre()) {
+        if ($vitesse <= 0 || ! $this->isDemarre()) {
             return false;
         }
 
-        $nouvelleVitesse = min($this->getVitesseMax(), $this->getVitesse() + $vitesse);
+        $vitesseActuelle = $this->getVitesse();
+
+        if ($vitesseActuelle > 0) {
+            $augmentationMax = (int) ceil($vitesseActuelle * 0.3);
+            $augmentationMax = max(1, $augmentationMax);
+
+            if ($vitesse > $augmentationMax) {
+                $vitesse = $augmentationMax;
+            }
+        }
+
+        $nouvelleVitesse = min($this->getVitesseMax(), $vitesseActuelle + $vitesse);
         $this->setVitesse($nouvelleVitesse);
 
         return true;
     }
 
-    /**Retourne le nombre de voitures instanciées. */
+    /** Retourne le nombre de voitures instanciées. */
     public static function getNombreVoiture()
     {
         return self::$nombreVoiture;
     }
 
-    /**Affiche l'état courant de la voiture. */
+    /** Affiche l'état courant de la voiture. */
     public function __toString()
     {
         $chaine = parent::__toString();
@@ -159,7 +170,7 @@ class Voiture extends Vehicule
         return $chaine;
     }
 
-    /**Indique si le frein de parking est actif. */
+    /** Indique si le frein de parking est actif. */
     public function isFreinParkingActive()
     {
         return $this->freinParking;
