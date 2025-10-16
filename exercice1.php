@@ -1,37 +1,175 @@
 <?php
 /**
- * Nom : Letanneur
- * Prénom : Leo
+ * Nom : À compléter
+ * Prénom : À compléter
  * Fichier : exercice1.php
  * Date : 2025-10-16
  * Description : Gestion des règles de vitesse et frein de parking.
  */
 
-abstract class Vehicule 
+/** Classe représentant un véhicule générique. */
+abstract class Vehicule
 {
-    protected $demarrer = FALSE;
+    protected $demarrer = false;
+
     protected $vitesse = 0;
+
     protected $vitesseMax;
 
-    // On oblige les classes filles à définir les méthodes abstracts
-    abstract function demarrer();
-    abstract function eteindre();
-    abstract function decelerer($vitesse);
-    abstract function accelerer($vitesse);
+    abstract public function demarrer();
 
-    // Méthode magique toString
+    abstract public function eteindre();
+
+    abstract public function decelerer($vitesse);
+
+    abstract public function accelerer($vitesse);
+
+    /** Retourne une représentation textuelle du véhicule. */
     public function __toString()
     {
         $chaine = "Ceci est un véhicule <br/>";
         $chaine .= "---------------------- <br/>";
+
         return $chaine;
+    }
+
+    /** Retourne l'état du contact. */
+    public function isDemarre()
+    {
+        return $this->demarrer;
+    }
+
+    /** Met à jour l'état du contact. */
+    protected function setDemarrer($etat)
+    {
+        $this->demarrer = (bool) $etat;
+    }
+
+    /**Retourne la vitesse actuelle. */
+    public function getVitesse()
+    {
+        return $this->vitesse;
+    }
+
+    /** Met à jour la vitesse actuelle. */
+    protected function setVitesse($vitesse)
+    {
+        $this->vitesse = max(0, (int) $vitesse);
+    }
+
+    /** Retourne la vitesse maximale. */
+    public function getVitesseMax()
+    {
+        return $this->vitesseMax;
+    }
+
+    /** Met à jour la vitesse maximale. */
+    protected function setVitesseMax($vitesseMax)
+    {
+        $this->vitesseMax = max(0, (int) $vitesseMax);
     }
 }
 
-class Voiture extends Vehicule 
+/** Classe concrète représentant une voiture. */
+class Voiture extends Vehicule
 {
-   
-    // à compléter
+    private static $nombreVoiture = 0;
+
+    private $freinParking = true;
+
+    /** Initialise la voiture avec sa vitesse maximale. */
+    public function __construct($vitesseMax)
+    {
+        $this->setVitesseMax($vitesseMax);
+        self::$nombreVoiture++;
+    }
+
+    /** Démarre le véhicule et désactive le frein de parking. */
+    public function demarrer()
+    {
+        if ($this->isDemarre()) {
+            return false;
+        }
+
+        $this->setDemarrer(true);
+        $this->setFreinParking(false);
+
+        return true;
+    }
+
+    /** Éteint le véhicule et réactive le frein de parking. */
+    public function eteindre()
+    {
+        if (!$this->isDemarre()) {
+            return false;
+        }
+
+        $this->setDemarrer(false);
+        $this->setVitesse(0);
+        $this->setFreinParking(true);
+
+        return true;
+    }
+
+    /** Ralentit le véhicule sans descendre sous 0 km/h. */
+    public function decelerer($vitesse)
+    {
+        $vitesse = (int) $vitesse;
+
+        if ($vitesse <= 0 || !$this->isDemarre()) {
+            return false;
+        }
+
+        $this->setVitesse($this->getVitesse() - $vitesse);
+
+        return true;
+    }
+
+    /**Accélère le véhicule en respectant la vitesse maximale. */
+    public function accelerer($vitesse)
+    {
+        $vitesse = (int) $vitesse;
+
+        if ($vitesse <= 0 || !$this->isDemarre()) {
+            return false;
+        }
+
+        $nouvelleVitesse = min($this->getVitesseMax(), $this->getVitesse() + $vitesse);
+        $this->setVitesse($nouvelleVitesse);
+
+        return true;
+    }
+
+    /**Retourne le nombre de voitures instanciées. */
+    public static function getNombreVoiture()
+    {
+        return self::$nombreVoiture;
+    }
+
+    /**Affiche l'état courant de la voiture. */
+    public function __toString()
+    {
+        $chaine = parent::__toString();
+        $chaine .= "Type : Voiture <br/>";
+        $chaine .= "Démarrée : " . ($this->isDemarre() ? 'Oui' : 'Non') . " <br/>";
+        $chaine .= "Frein de parking : " . ($this->isFreinParkingActive() ? 'Activé' : 'Désactivé') . " <br/>";
+        $chaine .= "Vitesse actuelle : " . $this->getVitesse() . " km/h <br/>";
+        $chaine .= "Vitesse maximale : " . $this->getVitesseMax() . " km/h <br/>";
+
+        return $chaine;
+    }
+
+    /**Indique si le frein de parking est actif. */
+    public function isFreinParkingActive()
+    {
+        return $this->freinParking;
+    }
+
+    /** Met à jour l'état du frein de parking. */
+    protected function setFreinParking($etat)
+    {
+        $this->freinParking = (bool) $etat;
+    }
 }
 
 $veh1 = new Voiture(110);
