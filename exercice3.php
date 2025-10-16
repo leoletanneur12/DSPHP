@@ -10,16 +10,20 @@
 require_once __DIR__ . '/Avion.class.php';
 require_once __DIR__ . '/ManagerAvion.class.php';
 
-// Etablit la connexion PDO. Adapter la DSN si besoin (MySQL, SQLite, etc.).
+// Parametres de connexion a adapter selon votre environnement.
+$dsn = 'mysql:host=localhost;dbname=dphp;charset=utf8mb4';
+$utilisateur = 'root';
+$motDePasse = '';
+
 try {
-    $pdo = new PDO('sqlite:' . __DIR__ . '/avions.db');
+    $pdo = new PDO($dsn, $utilisateur, $motDePasse);
     $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 } catch (PDOException $exception) {
     die('Erreur connexion BDD : ' . $exception->getMessage());
 }
 
 $manager = new ManagerAvion($pdo);
-// La table "avions" doit déjà être créée dans la base (voir ManagerAvion::creerTable()).
+// La table "avions" doit deja exister dans la base.
 
 // Jeu de donnees de demonstration.
 $donneesAvions = [
@@ -62,3 +66,12 @@ foreach ($avions as $avion) {
     echo 'Constructeur : ' . $avion->getConstructeur() . '<br/>';
     echo '------------------------------<br/>';
 }
+
+// Exemple de script SQL attendu pour la table :
+// CREATE TABLE avions (
+//     id INT AUTO_INCREMENT PRIMARY KEY,
+//     nom VARCHAR(100) NOT NULL,
+//     pays_origine VARCHAR(100) NOT NULL,
+//     annee_service INT NOT NULL,
+//     constructeur VARCHAR(150) NOT NULL
+// );
