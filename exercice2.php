@@ -91,7 +91,7 @@ abstract class Vehicule
     }
 }
 
-// Classe représentant un avion.
+// Classe représentant un avion qui hérite de la classe Véhicule.
 class Avion extends Vehicule
 {
     private $altitude = 0;
