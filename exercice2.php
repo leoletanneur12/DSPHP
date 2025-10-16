@@ -1,40 +1,40 @@
 <?php
 /**
  * Nom : Letanneur
- * Prénom : Leo
+ * Prenom : Leo
  * Fichier : exercice2.php
  * Date : 2025-10-16
- * Description : Gestion des véhicules et ajout d'un avion.
+ * Description : Gestion simplifiee d'un avion avec contraintes de vitesse et altitude.
  */
 
-// Classe représentant un véhicule générique.
+// Classe de base representant un vehicule generique.
 abstract class Vehicule
 {
     protected $demarrer = false;
 
     protected $vitesse = 0;
 
-    protected $vitesseMax = 0;
+    protected $vitesseMax;
 
     abstract public function decelerer($vitesse);
 
     abstract public function accelerer($vitesse);
 
-    // Démarre le véhicule.
+    // Demarre le vehicule.
     public function demarrer()
     {
-        $this->setDemarrer(true);
+        $this->demarrer = true;
     }
 
-    // Éteint le véhicule.
+    // Eteint le vehicule.
     public function eteindre()
     {
-        $this->setDemarrer(false);
-        $this->setVitesse(0);
+        $this->demarrer = false;
+        $this->vitesse = 0;
     }
 
-    // Indique si le véhicule est démarré.
-    public function estDemarre()
+    // Retourne vrai si le vehicule est demarre.
+    public function isDemarre()
     {
         return $this->demarrer;
     }
@@ -45,191 +45,45 @@ abstract class Vehicule
         return $this->vitesse;
     }
 
+    // Met a jour la vitesse actuelle.
+    protected function setVitesse($vitesse)
+    {
+        $this->vitesse = max(0, (int) $vitesse);
+    }
+
     // Retourne la vitesse maximale.
     public function getVitesseMax()
     {
         return $this->vitesseMax;
     }
 
-    // Met à jour la vitesse actuelle.
-    protected function setVitesse($vitesse)
-    {
-        $this->vitesse = max(0, (int) $vitesse);
-    }
-
-    // Met à jour la vitesse maximale.
+    // Met a jour la vitesse maximale.
     protected function setVitesseMax($vitesseMax)
     {
         $this->vitesseMax = max(0, (int) $vitesseMax);
     }
 
-    // Met à jour l'état du contact.
-    protected function setDemarrer($etat)
-    {
-        $this->demarrer = (bool) $etat;
-    }
-
-    // Retourne une représentation textuelle du véhicule.
+    // Retourne une representation textuelle du vehicule.
     public function __toString()
     {
-        $chaine = $this->formatLine('Ceci est un véhicule');
-        $chaine .= $this->formatLine('----------------------');
+        $chaine = "Ceci est un vehicule <br/>";
+        $chaine .= "---------------------- <br/>";
 
         return $chaine;
     }
-
-    // Prépare une ligne en fonction du contexte (CLI ou navigateur).
-    protected function formatLine($texte)
-    {
-        return $texte . $this->getLineBreak();
-    }
-
-    // Retourne le séparateur adapté (saut de ligne ou balise HTML).
-    protected function getLineBreak()
-    {
-        return PHP_SAPI === 'cli' ? PHP_EOL : '<br/>';
-    }
 }
 
-// Classe représentant un avion qui hérite de la classe Véhicule.
+// Classe representant un avion avec gestion de l'altitude et du train d'atterrissage.
 class Avion extends Vehicule
 {
     private $altitude = 0;
 
-    private $altitudeMax = 0;
+    private $trainAtterrissageSorti = true;
 
-    private $trainSorti = true;
-
-    // Initialise un avion avec ses limites de vitesse et d'altitude.
-    public function __construct($vitesseMax, $altitudeMax)
+    // Initialise l'avion avec sa vitesse maximale.
+    public function __construct($vitesseMax)
     {
         $this->setVitesseMax($vitesseMax);
-        $this->setAltitudeMax($altitudeMax);
-    }
-
-    // Accélère l'avion dans les limites autorisées.
-    public function accelerer($vitesse)
-    {
-        if (! $this->estDemarre() || $this->getAltitude() === 0) {
-            return false;
-        }
-
-        if ($this->getTrainSorti()) {
-            return false;
-        }
-
-        $vitesse = (int) $vitesse;
-
-        if ($vitesse <= 0) {
-            return false;
-        }
-
-        $nouvelleVitesse = min($this->getVitesseMax(), $this->getVitesse() + $vitesse);
-        $this->setVitesse($nouvelleVitesse);
-
-        return true;
-    }
-
-    // Décélère l'avion sans passer sous 0 km/h.
-    public function decelerer($vitesse)
-    {
-        if (! $this->estDemarre()) {
-            return false;
-        }
-
-        $vitesse = (int) $vitesse;
-
-        if ($vitesse <= 0) {
-            return false;
-        }
-
-        $this->setVitesse($this->getVitesse() - $vitesse);
-
-        return true;
-    }
-
-    // Décolle si la machine est démarrée et encore au sol.
-    public function decoller()
-    {
-        if (! $this->estDemarre() || $this->getAltitude() > 0) {
-            return false;
-        }
-
-        $this->setAltitude(100);
-        $this->rentrerTrainAtterrissage();
-
-        return true;
-    }
-
-    // Atterrit immédiatement.
-    public function atterrir()
-    {
-        if ($this->getAltitude() === 0) {
-            return false;
-        }
-
-        $this->setAltitude(0);
-        $this->setVitesse(0);
-        $this->sortirTrainAtterrissage();
-
-        return true;
-    }
-
-    // Augmente l'altitude sans dépasser le plafond.
-    public function prendreAltitude($valeur)
-    {
-        if ($this->getAltitude() === 0) {
-            return false;
-        }
-
-        $valeur = (int) $valeur;
-
-        if ($valeur <= 0) {
-            return false;
-        }
-
-        $nouvelleAltitude = min($this->getAltitudeMax(), $this->getAltitude() + $valeur);
-        $this->setAltitude($nouvelleAltitude);
-
-        return true;
-    }
-
-    // Diminue l'altitude sans passer sous 0 m.
-    public function perdreAltitude($valeur)
-    {
-        if ($this->getAltitude() === 0) {
-            return false;
-        }
-
-        $valeur = (int) $valeur;
-
-        if ($valeur <= 0) {
-            return false;
-        }
-
-        $this->setAltitude($this->getAltitude() - $valeur);
-
-        if ($this->getAltitude() === 0) {
-            $this->sortirTrainAtterrissage();
-        }
-
-        return true;
-    }
-
-    // Sort le train d'atterrissage.
-    public function sortirTrainAtterrissage()
-    {
-        $this->setTrainSorti(true);
-
-        return true;
-    }
-
-    // Rentre le train d'atterrissage.
-    public function rentrerTrainAtterrissage()
-    {
-        $this->setTrainSorti(false);
-
-        return true;
     }
 
     // Retourne l'altitude actuelle.
@@ -238,71 +92,198 @@ class Avion extends Vehicule
         return $this->altitude;
     }
 
-    // Retourne l'altitude maximale.
-    public function getAltitudeMax()
-    {
-        return $this->altitudeMax;
-    }
-
-    // Indique si le train est sorti.
-    public function getTrainSorti()
-    {
-        return $this->trainSorti;
-    }
-
-    // Prépare une description textuelle de l'avion.
-    public function __toString()
-    {
-        $ligne = parent::__toString();
-        $ligne .= $this->formatLine('Type : Avion');
-        $ligne .= $this->formatLine('Démarré : ' . ($this->estDemarre() ? 'Oui' : 'Non'));
-        $ligne .= $this->formatLine('Vitesse : ' . $this->getVitesse() . ' km/h');
-        $ligne .= $this->formatLine('Vitesse max : ' . $this->getVitesseMax() . ' km/h');
-        $ligne .= $this->formatLine('Altitude : ' . $this->getAltitude() . ' m');
-        $ligne .= $this->formatLine('Plafond : ' . $this->getAltitudeMax() . ' m');
-        $ligne .= $this->formatLine('Train sorti : ' . ($this->getTrainSorti() ? 'Oui' : 'Non'));
-
-        return $ligne;
-    }
-
-    // Met à jour l'altitude courante.
+    // Met a jour l'altitude actuelle.
     protected function setAltitude($altitude)
     {
-        $this->altitude = max(0, min((int) $altitude, $this->getAltitudeMax()));
+        $this->altitude = max(0, (int) $altitude);
     }
 
-    // Met à jour le plafond de l'avion.
-    protected function setAltitudeMax($altitudeMax)
+    // Retourne vrai si le train est sorti.
+    public function isTrainAtterrissageSorti()
     {
-        $altitudeMax = max(0, (int) $altitudeMax);
-        $this->altitudeMax = min(40000, $altitudeMax);
+        return $this->trainAtterrissageSorti;
     }
 
-    // Met à jour l'état du train d'atterrissage.
-    protected function setTrainSorti($etat)
+    // Met a jour l'etat du train d'atterrissage.
+    protected function setTrainAtterrissageSorti($etat)
     {
-        $this->trainSorti = (bool) $etat;
+        $this->trainAtterrissageSorti = (bool) $etat;
     }
 
-    // Encadre la vitesse maximale des avions.
-    protected function setVitesseMax($vitesseMax)
+    // Accelere l'avion en respectant la vitesse maximale.
+    public function accelerer($vitesse)
     {
-        parent::setVitesseMax(min(2000, (int) $vitesseMax));
+        $vitesse = (int) $vitesse;
+
+        if (! $this->isDemarre()) {
+            throw new RuntimeException('Impossible d accelerer : le moteur est eteint.');
+        }
+
+        if ($vitesse <= 0) {
+            throw new InvalidArgumentException('La vitesse a ajouter doit etre positive.');
+        }
+
+        $nouvelleVitesse = min($this->getVitesseMax(), $this->getVitesse() + $vitesse);
+        $this->setVitesse($nouvelleVitesse);
+
+        return $this->getVitesse();
+    }
+
+    // Decelere l'avion sans passer en dessous de 0.
+    public function decelerer($vitesse)
+    {
+        $vitesse = (int) $vitesse;
+
+        if (! $this->isDemarre()) {
+            throw new RuntimeException('Impossible de decelerer : le moteur est eteint.');
+        }
+
+        if ($vitesse <= 0) {
+            throw new InvalidArgumentException('La vitesse a retirer doit etre positive.');
+        }
+
+        $this->setVitesse($this->getVitesse() - $vitesse);
+
+        return $this->getVitesse();
+    }
+
+    // Permet a l'avion de decoller lorsque la vitesse est suffisante.
+    public function decoller()
+    {
+        if (! $this->isDemarre()) {
+            throw new RuntimeException('Impossible de decoller moteur eteint.');
+        }
+
+        if ($this->getVitesse() < 120) {
+            throw new RuntimeException('La vitesse doit atteindre 120 km/h pour decoller.');
+        }
+
+        if ($this->getAltitude() > 0) {
+            throw new RuntimeException('L avion est deja en vol.');
+        }
+
+        $this->setAltitude(100);
+    }
+
+    // Permet de monter en altitude en controlant le train d'atterrissage.
+    public function monter($gainAltitude)
+    {
+        $gainAltitude = (int) $gainAltitude;
+
+        if ($gainAltitude <= 0) {
+            throw new InvalidArgumentException('Le gain d altitude doit etre positif.');
+        }
+
+        if (! $this->isDemarre()) {
+            throw new RuntimeException('Impossible de monter moteur eteint.');
+        }
+
+        if ($this->getAltitude() >= 300 && $this->isTrainAtterrissageSorti()) {
+            throw new RuntimeException('Impossible de monter : le train doit etre rentre au dessus de 300 metres.');
+        }
+
+        $this->setAltitude($this->getAltitude() + $gainAltitude);
+    }
+
+    // Permet de descendre en altitude sans passer sous 0.
+    public function descendre($perteAltitude)
+    {
+        $perteAltitude = (int) $perteAltitude;
+
+        if ($perteAltitude <= 0) {
+            throw new InvalidArgumentException('La perte d altitude doit etre positive.');
+        }
+
+        $altitudeCible = $this->getAltitude() - $perteAltitude;
+        $this->setAltitude($altitudeCible);
+    }
+
+    // Rentre le train d'atterrissage.
+    public function rentrerTrain()
+    {
+        $this->setTrainAtterrissageSorti(false);
+    }
+
+    // Sort le train d'atterrissage.
+    public function sortirTrain()
+    {
+        $this->setTrainAtterrissageSorti(true);
+    }
+
+    // Tente un atterrissage en verifiant vitesse et altitude.
+    public function atterrir()
+    {
+        if (! $this->isTrainAtterrissageSorti()) {
+            throw new RuntimeException('Impossible d atterrir : train rentre.');
+        }
+
+        $vitesseActuelle = (int) $this->getVitesse();
+
+        if ($vitesseActuelle < 80 || $vitesseActuelle > 110) {
+            throw new RuntimeException('L atterrissage requiert une vitesse entre 80 et 110 km/h.');
+        }
+
+        $altitudeActuelle = (int) $this->getAltitude();
+
+        if ($altitudeActuelle < 50 || $altitudeActuelle > 150) {
+            throw new RuntimeException('L altitude doit etre comprise entre 50 et 150 metres pour atterrir.');
+        }
+
+        $this->setAltitude(0);
+        $this->setVitesse(0);
+    }
+
+    // Retourne une representation detaillee de l'avion.
+    public function __toString()
+    {
+        $chaine = parent::__toString();
+        $chaine .= "Type : Avion <br/>";
+        $chaine .= "Moteur : " . ($this->isDemarre() ? 'On' : 'Off') . " <br/>";
+        $chaine .= "Vitesse : " . $this->getVitesse() . " km/h <br/>";
+        $chaine .= "Altitude : " . $this->getAltitude() . " m <br/>";
+        $chaine .= "Train : " . ($this->isTrainAtterrissageSorti() ? 'Sorti' : 'Rentre') . " <br/>";
+
+        return $chaine;
     }
 }
 
-// Exemple d'utilisation simple.
-$separator = PHP_SAPI === 'cli' ? PHP_EOL : '<br/>';
+// Affiche l'etat courant de l'avion avec un libelle.
+function afficherEtat($etape, Avion $avion)
+{
+    echo "<strong>" . $etape . "</strong><br/>";
+    echo $avion;
+}
 
-$avion = new Avion(950, 12000);
-$avion->demarrer();
-$avion->decoller();
-$avion->rentrerTrainAtterrissage();
-$avion->accelerer(300);
-$avion->prendreAltitude(2000);
-echo $avion . $separator;
+// Exemple d'utilisation pour valider les fonctionnalites principales.
+try {
+    $avion = new Avion(900);
 
-$avion->perdreAltitude(1500);
-$avion->sortirTrainAtterrissage();
-$avion->atterrir();
-echo $avion . $separator;
+    $avion->demarrer();
+    $avion->accelerer(130);
+    $avion->decoller();
+    afficherEtat('Apres decollage', $avion);
+
+    $avion->rentrerTrain();
+    $avion->monter(350);
+    afficherEtat('Train rentre au dessus de 300 m', $avion);
+
+    try {
+        $avion->sortirTrain();
+        $avion->monter(10);
+    } catch (Exception $avertissement) {
+        echo 'Controle train : ' . $avertissement->getMessage() . "<br/>";
+        $avion->rentrerTrain();
+    }
+
+    $avion->descendre(300);
+    $avion->sortirTrain();
+    $avion->descendre(40);
+    $avion->decelerer(20);
+    afficherEtat('Approche finale', $avion);
+
+    $avion->atterrir();
+    $avion->eteindre();
+    afficherEtat('Au sol', $avion);
+} catch (Exception $exception) {
+    echo 'Erreur inattendue : ' . $exception->getMessage() . "<br/>";
+}
