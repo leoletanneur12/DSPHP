@@ -27,8 +27,8 @@ abstract class Vehicule
     /** Retourne une représentation textuelle du véhicule. */
     public function __toString()
     {
-        $chaine = "Ceci est un véhicule <br/>";
-        $chaine .= "---------------------- <br/>";
+        $chaine = $this->formatLine('Ceci est un véhicule');
+        $chaine .= $this->formatLine('----------------------');
 
         return $chaine;
     }
@@ -68,6 +68,18 @@ abstract class Vehicule
     {
         $this->vitesseMax = max(0, (int) $vitesseMax);
     }
+
+    /** Retourne la chaîne formatée en fonction du contexte (CLI ou navigateur). */
+    protected function formatLine($texte)
+    {
+        return $texte . $this->getLineBreak();
+    }
+
+    /** Retourne le séparateur adapté (saut de ligne ou balise HTML). */
+    protected function getLineBreak()
+    {
+        return PHP_SAPI === 'cli' ? PHP_EOL : '<br/>';
+    }
 }
 
 /** Classe concrète représentant une voiture. */
@@ -92,7 +104,7 @@ class Voiture extends Vehicule
         }
 
         $this->setDemarrer(true);
-        $this->setFreinParking(false);
+        $this->desactiverFreinParking();
 
         return true;
     }
@@ -106,12 +118,12 @@ class Voiture extends Vehicule
 
         $this->setDemarrer(false);
         $this->setVitesse(0);
-        $this->setFreinParking(true);
+        $this->activerFreinParking();
 
         return true;
     }
 
-    /** Ralentit le véhicule sans descendre sous 0 km/h et sans dépasser 20 km/h par action. */
+    /** Ralentit le véhicule sans descendre sous 0 km/h. */
     public function decelerer($vitesse)
     {
         $vitesse = (int) $vitesse;
@@ -120,19 +132,17 @@ class Voiture extends Vehicule
             return false;
         }
 
-        $vitesse = min($vitesse, 20);
-        $nouvelleVitesse = $this->getVitesse() - $vitesse;
-        $this->setVitesse($nouvelleVitesse);
+        $this->setVitesse($this->getVitesse() - $vitesse);
 
         return true;
     }
 
-    /** Accélère le véhicule en respectant la vitesse maximale. */
+    /** Accélère le véhicule en respectant la vitesse maximale et le frein de parking. */
     public function accelerer($vitesse)
     {
         $vitesse = (int) $vitesse;
 
-        if ($vitesse <= 0 || ! $this->isDemarre()) {
+        if ($vitesse <= 0 || ! $this->isDemarre() || $this->isFreinParkingActive()) {
             return false;
         }
 
@@ -152,11 +162,11 @@ class Voiture extends Vehicule
     public function __toString()
     {
         $chaine = parent::__toString();
-        $chaine .= "Type : Voiture <br/>";
-        $chaine .= "Démarrée : " . ($this->isDemarre() ? 'Oui' : 'Non') . " <br/>";
-        $chaine .= "Frein de parking : " . ($this->isFreinParkingActive() ? 'Activé' : 'Désactivé') . " <br/>";
-        $chaine .= "Vitesse actuelle : " . $this->getVitesse() . " km/h <br/>";
-        $chaine .= "Vitesse maximale : " . $this->getVitesseMax() . " km/h <br/>";
+        $chaine .= $this->formatLine('Type : Voiture');
+        $chaine .= $this->formatLine('Démarrée : ' . ($this->isDemarre() ? 'Oui' : 'Non'));
+        $chaine .= $this->formatLine('Frein de parking : ' . ($this->isFreinParkingActive() ? 'Activé' : 'Désactivé'));
+        $chaine .= $this->formatLine('Vitesse actuelle : ' . $this->getVitesse() . ' km/h');
+        $chaine .= $this->formatLine('Vitesse maximale : ' . $this->getVitesseMax() . ' km/h');
 
         return $chaine;
     }
@@ -167,6 +177,34 @@ class Voiture extends Vehicule
         return $this->freinParking;
     }
 
+    /** Active le frein de parking lorsque la voiture est immobile. */
+    public function activerFreinParking()
+    {
+        if ($this->getVitesse() > 0) {
+            return false;
+        }
+
+        if ($this->isFreinParkingActive()) {
+            return true;
+        }
+
+        $this->setFreinParking(true);
+
+        return true;
+    }
+
+    /** Désactive le frein de parking pour permettre le déplacement. */
+    public function desactiverFreinParking()
+    {
+        if (! $this->isFreinParkingActive()) {
+            return true;
+        }
+
+        $this->setFreinParking(false);
+
+        return true;
+    }
+
     /** Met à jour l'état du frein de parking. */
     protected function setFreinParking($etat)
     {
@@ -174,21 +212,23 @@ class Voiture extends Vehicule
     }
 }
 
+$separator = PHP_SAPI === 'cli' ? PHP_EOL : '<br/>';
+
 $veh1 = new Voiture(110);
 $veh1->demarrer();
 $veh1->accelerer(40);
-echo $veh1;
+echo $veh1 . $separator;
 $veh1->accelerer(40);
-echo $veh1;
+echo $veh1 . $separator;
 $veh1->accelerer(12);
 $veh1->accelerer(40);
-echo $veh1;
+echo $veh1 . $separator;
 $veh1->accelerer(40);
 $veh1->decelerer(120);
-echo $veh1;
+echo $veh1 . $separator;
 
 $veh2 = new Voiture(180);
-echo $veh2;
+echo $veh2 . $separator;
 
-echo "############################ <br/>";
-echo "Nombre de voiture instanciée : " . Voiture::getNombreVoiture() . "<br/>";
+echo '############################' . $separator;
+echo 'Nombre de voiture instanciée : ' . Voiture::getNombreVoiture() . $separator;
