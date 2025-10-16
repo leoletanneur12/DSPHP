@@ -1,4 +1,11 @@
 <?php
+/**
+ * Nom : Letanneur
+ * Prénom : Leo
+ * Fichier : exercice1.php
+ * Date : 2025-10-16
+ * Description : Gestion des règles de vitesse et frein de parking.
+ */
 
 abstract class Vehicule 
 {
