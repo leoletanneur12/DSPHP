@@ -11,30 +11,10 @@ class ManagerAvion
 {
     private $pdo;
 
-    // Conserve l'instance PDO.
+    // Conserve l'instance PDO. La table "avions" doit etre deja creee en base.
     public function __construct(PDO $pdo)
     {
         $this->pdo = $pdo;
-    }
-
-    // Cree la table si elle n'existe pas encore.
-    public function creerTable()
-    {
-        $sql = 'CREATE TABLE IF NOT EXISTS avions (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            nom TEXT NOT NULL,
-            pays_origine TEXT NOT NULL,
-            annee_service INTEGER NOT NULL,
-            constructeur TEXT NOT NULL
-        )';
-
-        $this->pdo->exec($sql);
-    }
-
-    // Supprime toutes les lignes pour faciliter les tests.
-    public function supprimerTous()
-    {
-        $this->pdo->exec('DELETE FROM avions');
     }
 
     // Insere un avion dans la base et met a jour son id.
